@@ -1,13 +1,12 @@
 import customtkinter as ctk
-from PIL import Image, ImageTk
+from PIL import Image
 import os
 
-# Nastavení barev
-PRIMARY_COLOR = "#3a6a3a"  # pěkná zelená
-ACCENT_COLOR = "#e4fa55"   # nová hover barva (světle žlutá)
-TEXT_COLOR = "#000000"     # černá pro text na tlačítkách
-SIGNATURE_COLOR = "#ffffff"  # bílá pro podpis
-TITLE_COLOR = "#ffffff"      # bílá pro nadpisy
+PRIMARY_COLOR = "#3a6a3a"
+ACCENT_COLOR = "#e4fa55"
+TEXT_COLOR = "#000000"
+SIGNATURE_COLOR = "#ffffff"
+TITLE_COLOR = "#ffffff"
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("dark-blue")
@@ -37,15 +36,18 @@ growth_mutations = {
 
 env_stack_values = {
     "Wet": 1, "Chilled": 1, "Chocolate": 1, "Moonlit": 1,
-    "Bloodlit": 3, "Frozen": 9, "Zombified": 24,
+    "Bloodlit": 3, "Plasma": 4, "Frozen": 9, "Zombified": 24,
     "Shocked": 99, "Celestial": 119, "Disco": 124
 }
+
+BUTTON_WIDTH = int(180 * 1.25)
 
 class GrowAGardenApp(ctk.CTk):
     def __init__(self):
         super().__init__()
         self.title("Grow a Garden Calculator")
-        self.geometry("600x500")
+        self.geometry("700x700")
+        self.minsize(700, 700)
         self.configure(fg_color=PRIMARY_COLOR)
 
         self.selected_rarity = None
@@ -69,67 +71,59 @@ class GrowAGardenApp(ctk.CTk):
         frame = self.frames[cont]
         frame.tkraise()
 
-class StartPage(ctk.CTkFrame):
+class BasePage(ctk.CTkFrame):
     def __init__(self, master):
         super().__init__(master, fg_color=PRIMARY_COLOR)
+        self.signature = ctk.CTkLabel(self, text="by Faru",
+                                      font=ctk.CTkFont(size=40, weight="bold"),
+                                      text_color=SIGNATURE_COLOR)
+        self.signature.place(relx=1.0, rely=1.0, anchor="se", x=-10, y=-10)
+
+class StartPage(BasePage):
+    def __init__(self, master):
+        super().__init__(master)
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
-        # Centrum pro logo a tlačítka
-        self.center_frame = ctk.CTkFrame(self, fg_color=PRIMARY_COLOR, corner_radius=0)
-        self.center_frame.grid(row=0, column=0, sticky="nsew")
-        self.center_frame.grid_rowconfigure(0, weight=1)
-        self.center_frame.grid_columnconfigure(0, weight=1)
+        center_frame = ctk.CTkFrame(self, fg_color=PRIMARY_COLOR)
+        center_frame.grid(row=0, column=0)
+        center_frame.grid_rowconfigure(0, weight=1)
+        center_frame.grid_columnconfigure(0, weight=1)
 
-        inner_frame = ctk.CTkFrame(self.center_frame, fg_color=PRIMARY_COLOR, corner_radius=0)
-        inner_frame.grid(row=0, column=0)
+        inner_frame = ctk.CTkFrame(center_frame, fg_color=PRIMARY_COLOR)
+        inner_frame.grid(row=0, column=0, padx=40, pady=40)
 
-        # Logo
         logo_path = os.path.join(os.path.dirname(__file__), "Site-community-image.png")
         if os.path.exists(logo_path):
-            image = ctk.CTkImage(Image.open(logo_path), size=(625, 250))
+            image = ctk.CTkImage(Image.open(logo_path), size=(625 * 1.25, 250 * 1.25))
             self.logo_label = ctk.CTkLabel(inner_frame, image=image, text="", fg_color=PRIMARY_COLOR)
             self.logo_label.image = image
             self.logo_label.pack(pady=(5, 5))
 
-        # Nadpis "Select Rarity"
-        title = ctk.CTkLabel(inner_frame, text="Select Rarity",
-                             font=ctk.CTkFont(size=28, weight="bold"),  # větší font
-                             text_color=TITLE_COLOR)
+        title = ctk.CTkLabel(inner_frame, text="Select Rarity", font=ctk.CTkFont(size=28, weight="bold"), text_color=TITLE_COLOR)
         title.pack(pady=15)
 
-        # Rarity tlačítka
-        self.btn_frame = ctk.CTkFrame(inner_frame, fg_color=PRIMARY_COLOR, corner_radius=0)
-        self.btn_frame.pack()
+        btn_frame = ctk.CTkFrame(inner_frame, fg_color=PRIMARY_COLOR)
+        btn_frame.pack()
 
         for rarity in fruits_by_rarity:
-            btn = ctk.CTkButton(self.btn_frame, text=rarity,
+            btn = ctk.CTkButton(btn_frame, text=rarity,
                                 fg_color="white", text_color=TEXT_COLOR,
                                 hover_color=ACCENT_COLOR,
                                 corner_radius=15,
                                 command=lambda r=rarity: self.select_rarity(r),
-                                width=180)
+                                width=BUTTON_WIDTH)
             btn.pack(pady=5)
-
-        # podpis "by Faru" vpravo dole
-        self.signature = ctk.CTkLabel(self, text="by Faru",
-                                     font=ctk.CTkFont(size=40, weight="bold"),  # dost velké
-                                     text_color=SIGNATURE_COLOR,
-                                     fg_color=PRIMARY_COLOR)
-        self.signature.place(relx=1.0, rely=1.0, anchor="se", x=-10, y=-10)
 
     def select_rarity(self, rarity):
         self.master.selected_rarity = rarity
         self.master.show_frame(FruitPage)
 
-class FruitPage(ctk.CTkFrame):
+class FruitPage(BasePage):
     def __init__(self, master):
-        super().__init__(master, fg_color=PRIMARY_COLOR)
-        self.grid_rowconfigure(0, weight=1)
-        self.grid_columnconfigure(0, weight=1)
-
-        self.inner_frame = ctk.CTkFrame(self, fg_color=PRIMARY_COLOR, corner_radius=0)
-        self.inner_frame.grid(row=0, column=0)
+        super().__init__(master)
+        self.inner_frame = ctk.CTkFrame(self, fg_color=PRIMARY_COLOR)
+        self.inner_frame.pack(expand=True)
 
         self.label = ctk.CTkLabel(self.inner_frame, text="", font=ctk.CTkFont(size=22, weight="bold"), text_color=TITLE_COLOR)
         self.label.pack(pady=10)
@@ -153,7 +147,7 @@ class FruitPage(ctk.CTkFrame):
                                 fg_color="white", text_color=TEXT_COLOR,
                                 hover_color=ACCENT_COLOR, corner_radius=15,
                                 command=lambda f=fruit, v=value: self.select_fruit(f, v),
-                                width=180)
+                                width=BUTTON_WIDTH)
             btn.pack(pady=3)
             self.fruit_buttons.append(btn)
 
@@ -166,14 +160,11 @@ class FruitPage(ctk.CTkFrame):
         self.master.base_value = value
         self.master.show_frame(GrowthMutationPage)
 
-class GrowthMutationPage(ctk.CTkFrame):
+class GrowthMutationPage(BasePage):
     def __init__(self, master):
-        super().__init__(master, fg_color=PRIMARY_COLOR)
-        self.grid_rowconfigure(0, weight=1)
-        self.grid_columnconfigure(0, weight=1)
-
+        super().__init__(master)
         self.inner_frame = ctk.CTkFrame(self, fg_color=PRIMARY_COLOR)
-        self.inner_frame.grid(row=0, column=0)
+        self.inner_frame.pack(expand=True)
 
         title = ctk.CTkLabel(self.inner_frame, text="Select Growth Mutation", font=ctk.CTkFont(size=22, weight="bold"), text_color=TITLE_COLOR)
         title.pack(pady=15)
@@ -188,21 +179,18 @@ class GrowthMutationPage(ctk.CTkFrame):
                                 fg_color="white", text_color=TEXT_COLOR,
                                 hover_color=ACCENT_COLOR, corner_radius=15,
                                 command=lambda m=mult: self.select_mutation(m),
-                                width=180)
+                                width=BUTTON_WIDTH)
             btn.pack(pady=4)
 
     def select_mutation(self, mult):
         self.master.growth_mult = mult
         self.master.show_frame(EnvironmentalMutationPage)
 
-class EnvironmentalMutationPage(ctk.CTkFrame):
+class EnvironmentalMutationPage(BasePage):
     def __init__(self, master):
-        super().__init__(master, fg_color=PRIMARY_COLOR)
-        self.grid_rowconfigure(0, weight=1)
-        self.grid_columnconfigure(0, weight=1)
-
+        super().__init__(master)
         self.inner_frame = ctk.CTkFrame(self, fg_color=PRIMARY_COLOR)
-        self.inner_frame.grid(row=0, column=0)
+        self.inner_frame.pack(expand=True)
 
         title = ctk.CTkLabel(self.inner_frame, text="Select Environmental Mutations", font=ctk.CTkFont(size=22, weight="bold"), text_color=TITLE_COLOR)
         title.pack(pady=10)
@@ -221,7 +209,7 @@ class EnvironmentalMutationPage(ctk.CTkFrame):
             self.vars[mut] = var
 
         confirm_btn = ctk.CTkButton(self.inner_frame, text="Confirm", fg_color=ACCENT_COLOR, text_color=TEXT_COLOR,
-                                    corner_radius=15, command=self.confirm, width=180)
+                                    corner_radius=15, command=self.confirm, width=BUTTON_WIDTH)
         confirm_btn.pack(pady=15)
 
     def confirm(self):
@@ -235,14 +223,11 @@ class EnvironmentalMutationPage(ctk.CTkFrame):
         self.master.selected_env = selected
         self.master.show_frame(ResultPage)
 
-class ResultPage(ctk.CTkFrame):
+class ResultPage(BasePage):
     def __init__(self, master):
-        super().__init__(master, fg_color=PRIMARY_COLOR)
-        self.grid_rowconfigure(0, weight=1)
-        self.grid_columnconfigure(0, weight=1)
-
+        super().__init__(master)
         self.inner_frame = ctk.CTkFrame(self, fg_color=PRIMARY_COLOR)
-        self.inner_frame.grid(row=0, column=0)
+        self.inner_frame.pack(expand=True)
 
         self.label = ctk.CTkLabel(self.inner_frame, text="", font=ctk.CTkFont(size=18, weight="bold"), text_color=TITLE_COLOR, justify="left")
         self.label.pack(pady=20)
@@ -261,6 +246,7 @@ class ResultPage(ctk.CTkFrame):
         growth_mult = self.master.growth_mult
         stack_sum = sum(env_stack_values.get(m, 0) for m in self.master.selected_env)
         total = base_value * growth_mult * (stack_sum if stack_sum > 0 else 1)
+        total_str = f"{total:,}".replace(",", " ")
 
         env_text = ", ".join(self.master.selected_env) if self.master.selected_env else "None"
 
@@ -270,10 +256,9 @@ class ResultPage(ctk.CTkFrame):
             f"Growth Mutation Multiplier: {growth_mult}\n"
             f"Environmental Mutations: {env_text}\n"
             f"Environmental Multiplier Sum: {stack_sum if stack_sum > 0 else 1}\n"
-            f"Total Value: {total}"
+            f"Total Value: {total_str}"
         )
         self.label.configure(text=result_text)
-
         super().tkraise(*args, **kwargs)
 
 if __name__ == "__main__":
